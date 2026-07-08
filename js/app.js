@@ -76,8 +76,25 @@ function goToView(view){
   if(navBtn) navBtn.classList.add('active');
 }
 
+// ---------- HEADER ----------
+function updateHeader(){
+  const titleEl = document.getElementById('headerTitle');
+  const subEl = document.getElementById('headerSub');
+  const dateStr = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const treino = todaySession.treinoId ? getTreino(todaySession.treinoId) : null;
+  if(treino){
+    titleEl.textContent = treino.nome || 'Treino';
+    subEl.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  } else {
+    titleEl.textContent = 'Nenhum treino selecionado';
+    subEl.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  }
+}
+
 // ---------- HOME ----------
 function renderHome(){
+  updateHeader();
   const picker = document.getElementById('treinoPicker');
   const emptyState = document.getElementById('homeEmptyState');
   const activeBlock = document.getElementById('activeTreinoBlock');

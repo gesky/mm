@@ -56,7 +56,7 @@ function renderBody(view, highlightMuscles){
     const active = highlightMuscles.includes(muscle);
     if(active){
       blobs += `<ellipse cx="${r.cx}" cy="${r.cy}" rx="${r.rx}" ry="${r.ry}"
-        fill="#ff5a3c" opacity="0.85" filter="url(#glow)"/>`;
+        fill="#39e26a" opacity="0.85" filter="url(#glow)"/>`;
     }
   }
   return `<svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
