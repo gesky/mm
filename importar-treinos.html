@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muscle Memory — Importar treinos</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body{ background:#17181b; color:#f0f0f1; font-family:'Manrope',sans-serif; max-width:520px; margin:40px auto; padding:0 20px; }
+  h1{ font-size:20px; }
+  button{ background:#39e26a; color:#06210f; border:none; font-weight:700; font-size:15px; padding:14px 20px; border-radius:12px; cursor:pointer; width:100%; margin-top:16px; }
+  button:disabled{ opacity:0.5; }
+  #log{ margin-top:20px; font-size:13px; color:#9a9ca1; white-space:pre-wrap; line-height:1.6; }
+  .warn{ color:#f97066; }
+  .ok{ color:#39e26a; }
+</style>
+</head>
+<body>
+  <h1>Importar treinos A/B/C/D (a partir do print)</h1>
+  <p style="color:#9a9ca1; font-size:14px;">Isso cria 4 treinos novos no Firestore com os exercícios do seu print, já batidos com a base pública (foto + músculo). Roda uma vez só — depois pode apagar este arquivo do repositório.</p>
+  <button id="btnImport">Importar treinos agora</button>
+  <div id="log"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script>
+    const IMG_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+
+    const SEED = {"Treino A - Peitoral e Tríceps": [{"displayName": "Supino Reto Barra", "exercicioDbId": "Barbell_Bench_Press_-_Medium_Grip", "imagem": "Barbell_Bench_Press_-_Medium_Grip/0.jpg", "primaryMuscles": ["chest"], "series": 3, "reps": "10-12", "pesoAtual": 15, "pesoMeta": null}, {"displayName": "Banco Articulado Inclinado", "exercicioDbId": "Leverage_Incline_Chest_Press", "imagem": "Leverage_Incline_Chest_Press/0.jpg", "primaryMuscles": ["chest"], "series": 3, "reps": "10-12", "pesoAtual": 15, "pesoMeta": null}, {"displayName": "Crucifixo Articulado", "exercicioDbId": "Butterfly", "imagem": "Butterfly/0.jpg", "primaryMuscles": ["chest"], "series": 3, "reps": "10-12", "pesoAtual": 8, "pesoMeta": null}, {"displayName": "Cross Over Inferior", "exercicioDbId": "Low_Cable_Crossover", "imagem": "Low_Cable_Crossover/0.jpg", "primaryMuscles": ["chest"], "series": 3, "reps": "10-12", "pesoAtual": 3, "pesoMeta": null}, {"displayName": "Roldana Barra", "exercicioDbId": "Triceps_Pushdown", "imagem": "Triceps_Pushdown/0.jpg", "primaryMuscles": ["triceps"], "series": 3, "reps": "10-12", "pesoAtual": 6, "pesoMeta": null}, {"displayName": "Francês Roldana", "exercicioDbId": "Cable_Rope_Overhead_Triceps_Extension", "imagem": "Cable_Rope_Overhead_Triceps_Extension/0.jpg", "primaryMuscles": ["triceps"], "series": 3, "reps": "10-12", "pesoAtual": 4, "pesoMeta": null}, {"displayName": "Mergulho", "exercicioDbId": "Dip_Machine", "imagem": "Dip_Machine/0.jpg", "primaryMuscles": ["triceps"], "series": 3, "reps": "10-12", "pesoAtual": 30, "pesoMeta": null}], "Treino B - Pernas": [{"displayName": "Leg 45", "exercicioDbId": "Leg_Press", "imagem": "Leg_Press/0.jpg", "primaryMuscles": ["quadriceps"], "series": 3, "reps": "10-12", "pesoAtual": 40, "pesoMeta": null}, {"displayName": "Cadeira Extensora", "exercicioDbId": "Leg_Extensions", "imagem": "Leg_Extensions/0.jpg", "primaryMuscles": ["quadriceps"], "series": 3, "reps": "10-12", "pesoAtual": 0, "pesoMeta": null}, {"displayName": "Hack 45", "exercicioDbId": "Hack_Squat", "imagem": "Hack_Squat/0.jpg", "primaryMuscles": ["quadriceps"], "series": 3, "reps": "10-12", "pesoAtual": 40, "pesoMeta": null}, {"displayName": "Mesa Flexora", "exercicioDbId": "Lying_Leg_Curls", "imagem": "Lying_Leg_Curls/0.jpg", "primaryMuscles": ["hamstrings"], "series": 3, "reps": "10-12", "pesoAtual": 20, "pesoMeta": null}, {"displayName": "Cadeira Flexora", "exercicioDbId": "Seated_Leg_Curl", "imagem": "Seated_Leg_Curl/0.jpg", "primaryMuscles": ["hamstrings"], "series": 3, "reps": "10-12", "pesoAtual": 11, "pesoMeta": null}, {"displayName": "Cadeira Abdutora", "exercicioDbId": "Thigh_Abductor", "imagem": "Thigh_Abductor/0.jpg", "primaryMuscles": ["abductors"], "series": 3, "reps": "10-12", "pesoAtual": 30, "pesoMeta": null}], "Treino C - Costas": [{"displayName": "Pulley Barra", "exercicioDbId": "Close-Grip_Front_Lat_Pulldown", "imagem": "Close-Grip_Front_Lat_Pulldown/0.jpg", "primaryMuscles": ["lats"], "series": 3, "reps": "10-12", "pesoAtual": 35, "pesoMeta": null}, {"displayName": "Pulley Triângulo", "exercicioDbId": "Full_Range-Of-Motion_Lat_Pulldown", "imagem": "Full_Range-Of-Motion_Lat_Pulldown/0.jpg", "primaryMuscles": ["lats"], "series": 3, "reps": "10-12", "pesoAtual": 35, "pesoMeta": null}, {"displayName": "Pulley Articulado Aberto", "exercicioDbId": "Wide-Grip_Lat_Pulldown", "imagem": "Wide-Grip_Lat_Pulldown/0.jpg", "primaryMuscles": ["lats"], "series": 3, "reps": "10-12", "pesoAtual": 20, "pesoMeta": null}, {"displayName": "Remada Baixa", "exercicioDbId": "Seated_Cable_Rows", "imagem": "Seated_Cable_Rows/0.jpg", "primaryMuscles": ["middle back"], "series": 3, "reps": "10-12", "pesoAtual": 40, "pesoMeta": null}, {"displayName": "Rosca Direta Halter", "exercicioDbId": "Dumbbell_Bicep_Curl", "imagem": "Dumbbell_Bicep_Curl/0.jpg", "primaryMuscles": ["biceps"], "series": 3, "reps": "10-12", "pesoAtual": 6, "pesoMeta": null}, {"displayName": "Rosca Martelo Halter", "exercicioDbId": "Hammer_Curls", "imagem": "Hammer_Curls/0.jpg", "primaryMuscles": ["biceps"], "series": 3, "reps": "10-12", "pesoAtual": 6, "pesoMeta": null}, {"displayName": "Rosca Scott Máquina", "exercicioDbId": "Machine_Preacher_Curls", "imagem": "Machine_Preacher_Curls/0.jpg", "primaryMuscles": ["biceps"], "series": 3, "reps": "10-12", "pesoAtual": 4, "pesoMeta": null}, {"displayName": "Flexão Barra", "exercicioDbId": "Wide-Grip_Rear_Pull-Up", "imagem": "Wide-Grip_Rear_Pull-Up/0.jpg", "primaryMuscles": ["lats"], "series": 3, "reps": "10-12", "pesoAtual": 0, "pesoMeta": null}], "Treino D - Ombro": [{"displayName": "Elevação Lateral Halter", "exercicioDbId": "Side_Lateral_Raise", "imagem": "Side_Lateral_Raise/0.jpg", "primaryMuscles": ["shoulders"], "series": 3, "reps": "10-12", "pesoAtual": 6, "pesoMeta": null}, {"displayName": "Elevação Frontal Roldana", "exercicioDbId": "Front_Cable_Raise", "imagem": "Front_Cable_Raise/0.jpg", "primaryMuscles": ["shoulders"], "series": 3, "reps": "10-12", "pesoAtual": 2, "pesoMeta": null}, {"displayName": "Crucifixo Invertido Cross", "exercicioDbId": "Cable_Rear_Delt_Fly", "imagem": "Cable_Rear_Delt_Fly/0.jpg", "primaryMuscles": ["shoulders"], "series": 3, "reps": "10-12", "pesoAtual": 0, "pesoMeta": null}, {"displayName": "Enc. de Ombro Halter", "exercicioDbId": "Dumbbell_Shoulder_Press", "imagem": "Dumbbell_Shoulder_Press/0.jpg", "primaryMuscles": ["shoulders"], "series": 3, "reps": "10-12", "pesoAtual": 16, "pesoMeta": null}, {"displayName": "Remada em Pé Roldana", "exercicioDbId": "Standing_Dumbbell_Upright_Row", "imagem": "Standing_Dumbbell_Upright_Row/0.jpg", "primaryMuscles": ["traps"], "series": 3, "reps": "10-12", "pesoAtual": 6, "pesoMeta": null}]};
+
+    // exercícios em que o match com a base pública é aproximado (equipamento parecido, não idêntico)
+    const APPROX = new Set(["Pulley Triângulo", "Remada em Pé Roldana", "Rosca Direta Halter", "Crucifixo Invertido Cross"]);
+
+    const log = document.getElementById('log');
+    function print(msg, cls){ log.innerHTML += `<div class="${cls||''}">${msg}</div>`; }
+
+    document.getElementById('btnImport').addEventListener('click', async () => {
+      document.getElementById('btnImport').disabled = true;
+      await currentUserReady;
+
+      const existing = await db.collection('treinos').get();
+      const existingNames = new Set(existing.docs.map(d => d.data().nome));
+
+      for(const [nomeTreino, exList] of Object.entries(SEED)){
+        if(existingNames.has(nomeTreino)){
+          print(`Pulei "${nomeTreino}" — já existe um treino com esse nome.`, 'warn');
+          continue;
+        }
+        const exercicios = exList.map(ex => ({
+          itemId: 'ex_' + Date.now() + '_' + Math.floor(Math.random()*100000),
+          exercicioDbId: ex.exercicioDbId,
+          nome: ex.displayName,
+          imagem: IMG_BASE + ex.imagem,
+          primaryMuscles: ex.primaryMuscles,
+          series: ex.series,
+          reps: ex.reps,
+          pesoAtual: ex.pesoAtual,
+          pesoMeta: ex.pesoMeta
+        }));
+        await db.collection('treinos').add({
+          nome: nomeTreino,
+          exercicios,
+          criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        print(`✓ "${nomeTreino}" importado com ${exercicios.length} exercícios.`, 'ok');
+      }
+
+      print('<br>Pronto! Abre o app normal (index.html) e os treinos já vão estar lá.', 'ok');
+      print('<br>Atenção: alguns exercícios não têm equivalente exato na base pública — usei o mais parecido possível (mesmo grupo muscular / equipamento similar): ' + [...APPROX].join(', ') + '. Se quiser trocar por outro mais preciso, é só abrir o treino, remover e buscar de novo.', 'warn');
+    });
+  </script>
+</body>
+</html>

@@ -36,6 +36,18 @@ service cloud.firestore {
    - Sua URL fica em `https://SEU_USUARIO.github.io/muscle-memory/` — como todos os caminhos no projeto são relativos (`css/`, `js/`, `assets/`), funciona certinho tanto nessa subpasta quanto em domínio próprio depois.
    - No Firebase Console, em **Authentication → Settings → Authorized domains**, adiciona `SEU_USUARIO.github.io` (senão o login anônimo é bloqueado).
 
+## Importar os treinos A/B/C/D do print
+
+Subi um arquivo `importar-treinos.html` com os 26 exercícios do teu print já convertidos (nome, série padrão 3x10-12, peso atual que você tinha anotado, e já batidos com a base pública pra puxar foto + músculo automaticamente). Pra usar:
+
+1. Sobe esse arquivo junto com o resto do repositório (ou abre localmente com um servidor simples, ex: `python3 -m http.server`).
+2. Abre `importar-treinos.html` no navegador e clica em **"Importar treinos agora"**.
+3. Ele cria os 4 treinos direto no teu Firestore (pula qualquer um que já exista com o mesmo nome, então pode clicar mais de uma vez sem duplicar).
+4. Depois abre o `index.html` normal — os treinos já vão estar lá, prontos.
+5. Pode apagar o `importar-treinos.html` do repo depois de usar.
+
+**Nota sobre os matches**: a maioria dos 26 exercícios bateu certinho com a base pública (Supino, Leg Press, Cadeira Extensora, Hack Squat, etc). Uns 4 (Pulley Triângulo, Remada em Pé Roldana, Rosca Direta Halter, Crucifixo Invertido Cross) usei o equivalente mais próximo disponível na base — mesmo grupo muscular, equipamento parecido mas não idêntico. Se quiser trocar por um mais preciso, é só abrir o treino no app, remover o exercício e buscar de novo.
+
 ## Próximos passos (depois que o esqueleto estiver validado)
 
 - Histórico de treinos (evolução de carga ao longo do tempo, gráfico tipo Chart.js — já usamos isso no Finn).
