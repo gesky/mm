@@ -16,15 +16,34 @@ function todayKey(){
 
 // ---------- INIT ----------
 async function init(){
-  await currentUserReady;
-  loadExerciseDB(); // não precisa esperar pra desenhar a tela
-  await loadTreinos();
-  await loadTodaySession();
-  renderHome();
-  renderTreinosView();
-  renderMetas();
+  // Liga a navegação e os modais IMEDIATAMENTE — mesmo que o Firebase falhe,
+  // o app continua clicável e mostra o erro na tela em vez de travar mudo.
   setupNav();
   setupModals();
+
+  try{
+    await currentUserReady;
+    if(!auth.currentUser){
+      throw new Error('Login anônimo não autenticou (verifique se "Anônimo" está ativado em Authentication > Sign-in method no Firebase Console).');
+    }
+    loadExerciseDB(); // não precisa esperar pra desenhar a tela
+    await loadTreinos();
+    await loadTodaySession();
+    renderHome();
+    renderTreinosView();
+    renderMetas();
+  } catch(err){
+    console.error('Erro ao carregar dados do Firebase:', err);
+    showFatalError(err);
+  }
+}
+
+function showFatalError(err){
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#3a1414;color:#ffb4a8;padding:14px 16px;font-size:13px;z-index:999;border-bottom:1px solid #f97066;';
+  box.innerHTML = `<strong>Erro ao conectar no Firebase</strong><br>${escapeHtml(err.message || String(err))}
+    <br><span style="opacity:0.8">Confira: Firestore ativado, Authentication &gt; Anônimo ativado, e o domínio atual em Authentication &gt; Settings &gt; Authorized domains.</span>`;
+  document.body.prepend(box);
 }
 
 async function loadTreinos(){

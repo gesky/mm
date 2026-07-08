@@ -38,37 +38,49 @@
 
     document.getElementById('btnImport').addEventListener('click', async () => {
       document.getElementById('btnImport').disabled = true;
-      await currentUserReady;
-
-      const existing = await db.collection('treinos').get();
-      const existingNames = new Set(existing.docs.map(d => d.data().nome));
-
-      for(const [nomeTreino, exList] of Object.entries(SEED)){
-        if(existingNames.has(nomeTreino)){
-          print(`Pulei "${nomeTreino}" — já existe um treino com esse nome.`, 'warn');
-          continue;
+      print('Conectando no Firebase...', '');
+      try{
+        await currentUserReady;
+        if(!auth.currentUser){
+          throw new Error('Login anônimo não autenticou. Verifique em Authentication > Sign-in method se "Anônimo" está ativado no Firebase Console, e se o domínio atual está em Authentication > Settings > Authorized domains.');
         }
-        const exercicios = exList.map(ex => ({
-          itemId: 'ex_' + Date.now() + '_' + Math.floor(Math.random()*100000),
-          exercicioDbId: ex.exercicioDbId,
-          nome: ex.displayName,
-          imagem: IMG_BASE + ex.imagem,
-          primaryMuscles: ex.primaryMuscles,
-          series: ex.series,
-          reps: ex.reps,
-          pesoAtual: ex.pesoAtual,
-          pesoMeta: ex.pesoMeta
-        }));
-        await db.collection('treinos').add({
-          nome: nomeTreino,
-          exercicios,
-          criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        print(`✓ "${nomeTreino}" importado com ${exercicios.length} exercícios.`, 'ok');
-      }
+        print('Login ok (uid: ' + auth.currentUser.uid + '). Buscando treinos existentes...', '');
 
-      print('<br>Pronto! Abre o app normal (index.html) e os treinos já vão estar lá.', 'ok');
-      print('<br>Atenção: alguns exercícios não têm equivalente exato na base pública — usei o mais parecido possível (mesmo grupo muscular / equipamento similar): ' + [...APPROX].join(', ') + '. Se quiser trocar por outro mais preciso, é só abrir o treino, remover e buscar de novo.', 'warn');
+        const existing = await db.collection('treinos').get();
+        const existingNames = new Set(existing.docs.map(d => d.data().nome));
+
+        for(const [nomeTreino, exList] of Object.entries(SEED)){
+          if(existingNames.has(nomeTreino)){
+            print(`Pulei "${nomeTreino}" — já existe um treino com esse nome.`, 'warn');
+            continue;
+          }
+          const exercicios = exList.map(ex => ({
+            itemId: 'ex_' + Date.now() + '_' + Math.floor(Math.random()*100000),
+            exercicioDbId: ex.exercicioDbId,
+            nome: ex.displayName,
+            imagem: IMG_BASE + ex.imagem,
+            primaryMuscles: ex.primaryMuscles,
+            series: ex.series,
+            reps: ex.reps,
+            pesoAtual: ex.pesoAtual,
+            pesoMeta: ex.pesoMeta
+          }));
+          await db.collection('treinos').add({
+            nome: nomeTreino,
+            exercicios,
+            criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          print(`✓ "${nomeTreino}" importado com ${exercicios.length} exercícios.`, 'ok');
+        }
+
+        print('<br>Pronto! Abre o app normal (index.html) e os treinos já vão estar lá.', 'ok');
+        print('<br>Atenção: alguns exercícios não têm equivalente exato na base pública — usei o mais parecido possível (mesmo grupo muscular / equipamento similar): ' + [...APPROX].join(', ') + '. Se quiser trocar por outro mais preciso, é só abrir o treino, remover e buscar de novo.', 'warn');
+      } catch(err){
+        console.error(err);
+        print('<br><strong>Erro:</strong> ' + (err.message || String(err)) + (err.code ? ' (código: ' + err.code + ')' : ''), 'warn');
+      } finally {
+        document.getElementById('btnImport').disabled = false;
+      }
     });
   </script>
 </body>
