@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Muscle Memory</title>
+<meta name="theme-color" content="#1a1c1f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Muscle Memory">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-title" id="headerTitle">Muscle Memory</div>
+    <div class="header-sub" id="headerSub">Hoje é dia de treino</div>
+  </header>
+
+  <!-- MAIN VIEWS -->
+  <main id="viewContainer">
+
+    <!-- VIEW: HOME -->
+    <section class="view" id="view-home">
+      <div class="section-label">Escolha o treino de hoje</div>
+      <div class="treino-picker" id="treinoPicker"></div>
+
+      <div id="activeTreinoBlock" class="hidden">
+        <div class="section-label" id="activeTreinoLabel">Treino</div>
+        <div class="exercise-checklist" id="exerciseChecklist"></div>
+      </div>
+
+      <div class="empty-state hidden" id="homeEmptyState">
+        <p>Você ainda não criou nenhum treino.</p>
+        <button class="btn-primary" onclick="goToView('treinos')">Criar meu primeiro treino</button>
+      </div>
+    </section>
+
+    <!-- VIEW: TREINOS (gerenciar A/B/C/D) -->
+    <section class="view hidden" id="view-treinos">
+      <div class="section-label">Meus treinos</div>
+      <div class="treino-list" id="treinoList"></div>
+      <button class="btn-primary btn-block" id="btnNovoTreino">+ Novo treino</button>
+    </section>
+
+    <!-- VIEW: TREINO DETAIL (editar exercícios de um treino) -->
+    <section class="view hidden" id="view-treino-detail">
+      <button class="btn-back" id="btnBackToTreinos">‹ Treinos</button>
+      <div class="treino-detail-header">
+        <input class="treino-name-input" id="treinoNameInput" placeholder="Nome do treino (ex: Treino A - Peito/Tríceps)">
+        <button class="btn-icon-danger" id="btnDeleteTreino" title="Excluir treino">🗑</button>
+      </div>
+      <div class="exercise-edit-list" id="exerciseEditList"></div>
+      <button class="btn-secondary btn-block" id="btnAddExercicio">+ Adicionar exercício</button>
+    </section>
+
+    <!-- VIEW: METAS -->
+    <section class="view hidden" id="view-metas">
+      <div class="section-label">Metas de carga</div>
+      <div class="metas-list" id="metasList"></div>
+      <div class="empty-state hidden" id="metasEmptyState">
+        <p>Adicione exercícios aos seus treinos para poder definir metas de peso.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="home">
+      <span class="nav-icon">🏠</span><span>Início</span>
+    </button>
+    <button class="nav-btn" data-view="treinos">
+      <span class="nav-icon">📋</span><span>Treinos</span>
+    </button>
+    <button class="nav-btn" data-view="metas">
+      <span class="nav-icon">🎯</span><span>Metas</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- MODAL: BUSCA DE EXERCÍCIO -->
+<div class="modal-overlay hidden" id="exercisePickerModal">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <input type="text" id="exerciseSearchInput" placeholder="Buscar exercício (ex: supino, agachamento...)" autocomplete="off">
+      <button class="btn-close" id="btnCloseExercisePicker">✕</button>
+    </div>
+    <div class="modal-body" id="exerciseSearchResults">
+      <div class="search-hint">Digite para buscar entre mais de 800 exercícios.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE DO EXERCÍCIO (confirmar antes de adicionar) -->
+<div class="modal-overlay hidden" id="exerciseConfirmModal">
+  <div class="modal-sheet modal-sheet-small">
+    <div class="modal-header">
+      <div class="modal-title" id="confirmExerciseName">Exercício</div>
+      <button class="btn-close" id="btnCloseConfirmModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="exercise-confirm-visual">
+        <img id="confirmExerciseImg" src="" alt="">
+        <div class="muscle-map-wrap" id="confirmMuscleMap"></div>
+      </div>
+      <div class="form-row">
+        <label>Séries</label>
+        <input type="number" id="confirmSeries" value="3" min="1" max="10">
+      </div>
+      <div class="form-row">
+        <label>Repetições</label>
+        <input type="text" id="confirmReps" placeholder="ex: 10-12" value="10-12">
+      </div>
+      <div class="form-row">
+        <label>Peso atual (kg)</label>
+        <input type="number" id="confirmPeso" placeholder="0" step="0.5">
+      </div>
+      <div class="form-row">
+        <label>Meta de peso (kg) <span class="optional">opcional</span></label>
+        <input type="number" id="confirmMeta" placeholder="0" step="0.5">
+      </div>
+      <button class="btn-primary btn-block" id="btnConfirmAddExercicio">Adicionar ao treino</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/muscle-map.js"></script>
+<script src="js/exercise-db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
